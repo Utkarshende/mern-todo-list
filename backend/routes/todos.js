@@ -1,4 +1,4 @@
-// backend/routes/todos.js (COMPLETE FILE)
+// backend/routes/todos.js (COMPLETE FILE with DELETE)
 
 const express = require('express');
 const router = express.Router();
@@ -63,10 +63,31 @@ router.put('/:id', async (req, res) => {
         // 4. Respond with the updated todo object
         res.json(todo);
     } catch (err) {
-        // This catch block will usually handle invalid ID format errors
         console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
+
+// @route   DELETE /api/todos/:id
+// @desc    Delete a Todo item
+// @access  Public
+router.delete('/:id', async (req, res) => {
+    try {
+        // 1. Find the todo item by ID and remove it
+        const todo = await Todo.findByIdAndDelete(req.params.id);
+
+        if (!todo) {
+            // If the item doesn't exist, return a 404
+            return res.status(404).json({ msg: 'Todo not found' });
+        }
+
+        // 2. Respond with a success message (or the deleted item)
+        res.json({ msg: 'Todo deleted successfully', todo: todo });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 
 module.exports = router;
