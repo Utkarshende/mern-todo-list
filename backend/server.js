@@ -24,10 +24,15 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => console.error('❌ Could not connect to MongoDB:', err));
 
+const todoRoutes = require('./routes/todos');
+
 // Basic route to check if the server is running (optional)
 app.get('/', (req, res) => {
     res.send('MERN Todo List API is running!');
 });
+
+// Use the Todo Routes for anything starting with /api/todos
+app.use('/api/todos', todoRoutes);
 
 // Start the server
 app.listen(PORT, () => {
