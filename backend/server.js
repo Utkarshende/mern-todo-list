@@ -1,38 +1,40 @@
-// /backend/server.js
+// /backend/server.js (COMPLETE FILE)
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
 const app = express();
 
 // Middleware
-// 1. CORS: Allows requests from your React frontend (running on a different port)
+// Enable CORS for all routes (to allow connection from React on port 3000)
 app.use(cors());
-// 2. Express JSON Parser: Allows the server to accept and parse JSON data in the body of requests
+// Built-in middleware to parse incoming JSON requests
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+
+// Import Todo Routes
+const todoRoutes = require('./routes/todos');
 
 // MongoDB Connection
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => console.error('❌ Could not connect to MongoDB:', err));
 
-const todoRoutes = require('./routes/todos');
+// Route Handlers
+// Use the Todo Routes for all API endpoints
+app.use('/api/todos', todoRoutes);
 
-// Basic route to check if the server is running (optional)
+// Basic root route
 app.get('/', (req, res) => {
     res.send('MERN Todo List API is running!');
 });
-
-// Use the Todo Routes for anything starting with /api/todos
-app.use('/api/todos', todoRoutes);
 
 // Start the server
 app.listen(PORT, () => {
