@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE = "http://localhost:5000/api/todos";
+const API_BASE = "https://mern-todo-list-backend-ovs6.onrender.com";
 
 function App() {
   const [todos, setTodos] = useState([]);
