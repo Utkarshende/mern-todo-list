@@ -1,4 +1,4 @@
-// frontend/src/App.js (FINAL FUNCTIONAL VERSION)
+// frontend/src/App.js (POLISHED VERSION)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -23,7 +23,7 @@ function App() {
   };
 
   const addTodo = async () => {
-    if (!newTodo) return;
+    if (!newTodo.trim()) return;
     try {
       const res = await axios.post(API_BASE, { text: newTodo });
       setTodos([res.data, ...todos]);
@@ -47,16 +47,10 @@ function App() {
     }
   };
 
-  // NEW: Delete Logic
   const deleteTodo = async (id) => {
     try {
-      // 1. Tell the backend to delete the item
       const res = await axios.delete(`${API_BASE}/${id}`);
-      
-      // 2. Filter out the deleted item from the local state
-      // This "removes" it from the screen without needing a page refresh
       setTodos(todos => todos.filter(todo => todo._id !== res.data.todo._id));
-      
     } catch (err) {
       console.error("Error deleting todo:", err);
     }
@@ -66,11 +60,14 @@ function App() {
     <div className="App">
       <div className="container">
         <h1>My Tasks</h1>
+        <p className="stats">
+          {todos.filter(t => t.completed).length} of {todos.length} tasks completed
+        </p>
         
         <div className="add-todo">
           <input 
             type="text" 
-            placeholder="What needs to be done?" 
+            placeholder="What's your next task?" 
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addTodo()}
@@ -88,17 +85,19 @@ function App() {
                 >
                   {todo.text}
                 </div>
-                {/* Updated Delete Button with onClick */}
                 <div 
                   className="delete-todo" 
                   onClick={() => deleteTodo(todo._id)}
+                  title="Delete task"
                 >
                   ✕
                 </div>
               </div>
             ))
           ) : (
-            <p>No tasks yet.</p>
+            <div className="empty-state">
+              <p>All clear! Time to relax. ☕</p>
+            </div>
           )}
         </div>
       </div>
