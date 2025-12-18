@@ -1,4 +1,4 @@
-// frontend/src/App.js (COMPLETE FILE WITH TOGGLE LOGIC)
+// frontend/src/App.js (FINAL FUNCTIONAL VERSION)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -33,22 +33,32 @@ function App() {
     }
   };
 
-  // NEW: Toggle Completion Logic
   const completeTodo = async (id) => {
     try {
-      // Call our backend PUT route
       const res = await axios.put(`${API_BASE}/${id}`);
-      
-      // Update the local state: find the item by ID and swap it with the updated one
       setTodos(todos => todos.map(todo => {
         if (todo._id === res.data._id) {
           todo.completed = res.data.completed;
         }
         return todo;
       }));
-
     } catch (err) {
       console.error("Error updating todo:", err);
+    }
+  };
+
+  // NEW: Delete Logic
+  const deleteTodo = async (id) => {
+    try {
+      // 1. Tell the backend to delete the item
+      const res = await axios.delete(`${API_BASE}/${id}`);
+      
+      // 2. Filter out the deleted item from the local state
+      // This "removes" it from the screen without needing a page refresh
+      setTodos(todos => todos.filter(todo => todo._id !== res.data.todo._id));
+      
+    } catch (err) {
+      console.error("Error deleting todo:", err);
     }
   };
 
@@ -72,14 +82,19 @@ function App() {
           {todos.length > 0 ? (
             todos.map(todo => (
               <div className="todo-item" key={todo._id}>
-                {/* Clicking the text calls the completeTodo function */}
                 <div 
                   className={`todo-text ${todo.completed ? "completed" : ""}`}
                   onClick={() => completeTodo(todo._id)}
                 >
                   {todo.text}
                 </div>
-                <div className="delete-todo">✕</div>
+                {/* Updated Delete Button with onClick */}
+                <div 
+                  className="delete-todo" 
+                  onClick={() => deleteTodo(todo._id)}
+                >
+                  ✕
+                </div>
               </div>
             ))
           ) : (
