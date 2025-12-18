@@ -1,11 +1,11 @@
-// frontend/src/App.js (POLISHED VERSION)
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
-const API_BASE = "https://mern-todo-list-backend-ovs6.onrender.com";
+const API_BASE = "http://localhost:5000/api/todos";
 
 function App() {
+  // Always initialize as an empty array []
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
 
@@ -16,9 +16,15 @@ function App() {
   const getTodos = async () => {
     try {
       const res = await axios.get(API_BASE);
-      setTodos(res.data);
+      // Safety check: ensure data is an array
+      if (Array.isArray(res.data)) {
+        setTodos(res.data);
+      } else {
+        setTodos([]);
+      }
     } catch (err) {
       console.error("Error fetching data:", err);
+      setTodos([]);
     }
   };
 
@@ -26,7 +32,8 @@ function App() {
     if (!newTodo.trim()) return;
     try {
       const res = await axios.post(API_BASE, { text: newTodo });
-      setTodos([res.data, ...todos]);
+      // Always use the spread operator to keep it an array
+      setTodos(prev => [res.data, ...prev]);
       setNewTodo("");
     } catch (err) {
       console.error("Error adding todo:", err);
@@ -36,12 +43,9 @@ function App() {
   const completeTodo = async (id) => {
     try {
       const res = await axios.put(`${API_BASE}/${id}`);
-      setTodos(todos => todos.map(todo => {
-        if (todo._id === res.data._id) {
-          todo.completed = res.data.completed;
-        }
-        return todo;
-      }));
+      setTodos(prev => prev.map(todo => 
+        todo._id === res.data._id ? { ...todo, completed: res.data.completed } : todo
+      ));
     } catch (err) {
       console.error("Error updating todo:", err);
     }
@@ -49,19 +53,24 @@ function App() {
 
   const deleteTodo = async (id) => {
     try {
-      const res = await axios.delete(`${API_BASE}/${id}`);
-      setTodos(todos => todos.filter(todo => todo._id !== res.data.todo._id));
+      await axios.delete(`${API_BASE}/${id}`);
+      // FIX: We filter the current state 'prev' to remove the item.
+      // We do NOT use res.data here because the backend returns a message object, not the full list.
+      setTodos(prev => prev.filter(todo => todo._id !== id));
     } catch (err) {
       console.error("Error deleting todo:", err);
     }
   };
+
+  // Helper to ensure we don't call .filter on a non-array in the JSX
+  const safeTodos = Array.isArray(todos) ? todos : [];
 
   return (
     <div className="App">
       <div className="container">
         <h1>My Tasks</h1>
         <p className="stats">
-          {todos.filter(t => t.completed).length} of {todos.length} tasks completed
+          {safeTodos.filter(t => t.completed).length} of {safeTodos.length} tasks completed
         </p>
         
         <div className="add-todo">
@@ -76,8 +85,8 @@ function App() {
         </div>
 
         <div className="todos-list">
-          {todos.length > 0 ? (
-            todos.map(todo => (
+          {safeTodos.length > 0 ? (
+            safeTodos.map(todo => (
               <div className="todo-item" key={todo._id}>
                 <div 
                   className={`todo-text ${todo.completed ? "completed" : ""}`}
@@ -85,18 +94,14 @@ function App() {
                 >
                   {todo.text}
                 </div>
-                <div 
-                  className="delete-todo" 
-                  onClick={() => deleteTodo(todo._id)}
-                  title="Delete task"
-                >
+                <div className="delete-todo" onClick={() => deleteTodo(todo._id)}>
                   ✕
                 </div>
               </div>
             ))
           ) : (
             <div className="empty-state">
-              <p>All clear! Time to relax. ☕</p>
+              <p>No tasks found.</p>
             </div>
           )}
         </div>
