@@ -1,4 +1,3 @@
-// backend/routes/todos.js (COMPLETE FILE with DELETE)
 
 const express = require('express');
 const router = express.Router();

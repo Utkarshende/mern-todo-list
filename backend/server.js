@@ -1,4 +1,3 @@
-// /backend/server.js (COMPLETE FILE)
 
 const express = require('express');
 const mongoose = require('mongoose');
