@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// Test Route
-router.get('/test', (req, res) => res.send("Auth route is found!"));
+// This should be .post, not .get
+router.post('/register', async (req, res) => {
+    // ... logic
+});
 
 module.exports = router;
