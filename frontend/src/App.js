@@ -12,7 +12,7 @@ function App() {
     const [isRegistering, setIsRegistering] = useState(false);
     const [newTodo, setNewTodo] = useState("");
 
-    // Memoized fetch function
+    // Function to fetch todos with the Auth Header
     const getTodos = useCallback(async () => {
         if (!token) return;
         try {
@@ -59,6 +59,7 @@ function App() {
         } catch (err) { console.error(err); }
     };
 
+    // View Logic
     if (!token) {
         return (
             <div className="App">
@@ -79,9 +80,12 @@ function App() {
                     <h1>My Tasks</h1>
                     <button onClick={logout} className="logout-btn">Logout</button>
                 </div>
-                {/* ... existing Add Todo and List logic with headers added to axios calls ... */}
                 <div className="add-todo">
-                    <input value={newTodo} onChange={e => setNewTodo(e.target.value)} placeholder="New Task..." />
+                    <input 
+                        value={newTodo} 
+                        onChange={e => setNewTodo(e.target.value)} 
+                        placeholder="Add a new task..." 
+                    />
                     <button onClick={addTodo}>Add</button>
                 </div>
                 <div className="todos-list">

@@ -176,3 +176,57 @@ h1 {
     border-radius: 6px;
     cursor: pointer;
 }
+:root {
+  --primary: #6366f1;
+  --danger: #ef4444;
+  --bg: #f8fafc;
+}
+
+.auth-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.auth-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.auth-container input {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.toggle-auth {
+  background: none;
+  border: none;
+  color: var(--primary);
+  margin-top: 15px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logout-btn {
+  background: #fee2e2;
+  color: var(--danger);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background: #fecaca;
+}
