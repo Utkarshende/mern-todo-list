@@ -1,92 +1,67 @@
-
 const express = require('express');
 const router = express.Router();
+const auth = require('../middleware/auth'); // Import the guard
 const Todo = require('../models/Todo');
 
-// @route   GET /api/todos
-// @desc    Get all Todo items
-// @access  Public
-router.get('/', async (req, res) => {
+// @route   GET /api/todos (PROTECTED)
+router.get('/', auth, async (req, res) => {
     try {
-        // Find all documents and sort by newest first (descending timestamp)
-        const todos = await Todo.find().sort({ timestamp: -1 });
+        // Find todos belonging ONLY to the logged-in user
+        const todos = await Todo.find({ user: req.user.id }).sort({ timestamp: -1 });
         res.json(todos);
     } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   POST /api/todos
-// @desc    Create a new Todo item
-// @access  Public
-router.post('/', async (req, res) => {
-    const { text } = req.body;
-
-    // Basic validation
-    if (!text) {
-        return res.status(400).json({ msg: 'Please enter a todo text' });
-    }
-
+// @route   POST /api/todos (PROTECTED)
+router.post('/', auth, async (req, res) => {
     try {
         const newTodo = new Todo({
-            text: text
+            text: req.body.text,
+            user: req.user.id // Save the user ID from the token
         });
-
         const todo = await newTodo.save();
         res.json(todo);
     } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   PUT /api/todos/:id
-// @desc    Toggle the completed status of a Todo item
-// @access  Public
-router.put('/:id', async (req, res) => {
+// @route   PUT /api/todos/:id (PROTECTED)
+router.put('/:id', auth, async (req, res) => {
     try {
-        // 1. Find the todo item by ID
         const todo = await Todo.findById(req.params.id);
-
-        if (!todo) {
-            return res.status(404).json({ msg: 'Todo not found' });
+        if (!todo) return res.status(404).json({ msg: 'Not found' });
+        
+        // Ensure user owns the todo
+        if (todo.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
         }
 
-        // 2. Toggle the 'completed' status
         todo.completed = !todo.completed;
-
-        // 3. Save the updated todo item back to the database
         await todo.save();
-
-        // 4. Respond with the updated todo object
         res.json(todo);
     } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
 
-// @route   DELETE /api/todos/:id
-// @desc    Delete a Todo item
-// @access  Public
-router.delete('/:id', async (req, res) => {
+// @route   DELETE /api/todos/:id (PROTECTED)
+router.delete('/:id', auth, async (req, res) => {
     try {
-        // 1. Find the todo item by ID and remove it
-        const todo = await Todo.findByIdAndDelete(req.params.id);
+        const todo = await Todo.findById(req.params.id);
+        if (!todo) return res.status(404).json({ msg: 'Not found' });
 
-        if (!todo) {
-            // If the item doesn't exist, return a 404
-            return res.status(404).json({ msg: 'Todo not found' });
+        if (todo.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized' });
         }
 
-        // 2. Respond with a success message (or the deleted item)
-        res.json({ msg: 'Todo deleted successfully', todo: todo });
+        await todo.deleteOne();
+        res.json({ msg: 'Todo removed', todo });
     } catch (err) {
-        console.error(err.message);
         res.status(500).send('Server Error');
     }
 });
-
 
 module.exports = router;
