@@ -1,0 +1,16 @@
+# Dependencies (Ignore all node_modules in any folder)
+node_modules/
+
+# Environment Variables (IMPORTANT: To keep your MongoDB URL safe)
+.env
+.env.local
+
+# Frontend Build files
+frontend/build/
+frontend/dist/
+
+# OS/Editor specific
+.DS_Store
+.vscode/
+npm-debug.log*
+.env
