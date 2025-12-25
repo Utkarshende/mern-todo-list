@@ -4,10 +4,9 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-console.log("JWT Secret Loaded:", process.env.JWT_SECRET ? "YES" : "NO");
 
 // Middleware
-app.use(cors());
+app.use(cors()); // For production, you can restrict this later
 app.use(express.json());
 
 // Import Routes
@@ -18,10 +17,18 @@ const todoRoutes = require('./routes/todos');
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
 
+// Health Check (Good for Render deployment)
+app.get('/', (req, res) => res.send("TaskFlow API is running..."));
+
 // Database Connection
+const PORT = process.env.PORT || 5000;
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log("✅ MongoDB Connected Successfully");
-        app.listen(process.env.PORT || 5000, () => console.log(`🚀 Server is running on port ${process.env.PORT}`));
+        app.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
     })
-    .catch(err => console.error("❌ DB Connection Error:", err));
+    .catch(err => {
+        console.error("❌ DB Connection Error:", err.message);
+        process.exit(1); // Stop the server if DB connection fails
+    });

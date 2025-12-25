@@ -4,13 +4,22 @@ import Login from './components/Login';
 import Register from './components/Register';
 import './App.css';
 
-const API_BASE = "http://localhost:5000/api/todos";
+// This logic uses the environment variable if it exists, otherwise localhost
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE = `${API_URL}/api/todos`;
 
 function App() {
     const [todos, setTodos] = useState([]);
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [isRegistering, setIsRegistering] = useState(false);
     const [newTodo, setNewTodo] = useState("");
+
+    // Function to logout (defined above useCallback so it's accessible)
+    const logout = useCallback(() => {
+        setToken(null);
+        setTodos([]);
+        localStorage.removeItem('token');
+    }, []);
 
     // Function to fetch todos with the Auth Header
     const getTodos = useCallback(async () => {
@@ -21,9 +30,10 @@ function App() {
             });
             setTodos(res.data);
         } catch (err) {
+            console.error("Fetch Error:", err);
             if (err.response?.status === 401) logout();
         }
-    }, [token]);
+    }, [token, logout]);
 
     useEffect(() => {
         if (token) {
@@ -34,11 +44,6 @@ function App() {
         }
     }, [token, getTodos]);
 
-    const logout = () => {
-        setToken(null);
-        setTodos([]);
-    };
-
     const addTodo = async () => {
         if (!newTodo.trim()) return;
         try {
@@ -47,7 +52,7 @@ function App() {
             });
             setTodos([res.data, ...todos]);
             setNewTodo("");
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Add Error:", err); }
     };
 
     const deleteTodo = async (id) => {
@@ -56,7 +61,7 @@ function App() {
                 headers: { 'x-auth-token': token }
             });
             setTodos(todos.filter(todo => todo._id !== id));
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Delete Error:", err); }
     };
 
     // View Logic
@@ -64,6 +69,7 @@ function App() {
         return (
             <div className="App">
                 <div className="container">
+                    <h1 className="brand-name">TaskFlow</h1>
                     {isRegistering ? <Register setToken={setToken} /> : <Login setToken={setToken} />}
                     <button className="toggle-auth" onClick={() => setIsRegistering(!isRegistering)}>
                         {isRegistering ? "Already have an account? Login" : "Need an account? Register"}
@@ -85,14 +91,18 @@ function App() {
                         value={newTodo} 
                         onChange={e => setNewTodo(e.target.value)} 
                         placeholder="Add a new task..." 
+                        onKeyPress={(e) => e.key === 'Enter' && addTodo()}
                     />
                     <button onClick={addTodo}>Add</button>
                 </div>
                 <div className="todos-list">
+                    {todos.length === 0 ? <p className="empty-msg">No tasks yet. Add one!</p> : null}
                     {todos.map(todo => (
                         <div key={todo._id} className="todo-item">
                             <span className={todo.completed ? "completed" : ""}>{todo.text}</span>
-                            <div className="delete-todo" onClick={() => deleteTodo(todo._id)}>✕</div>
+                            <div className="delete-todo" onClick={() => deleteTodo(todo._id)}>
+                                <i className="fas fa-trash"></i>
+                            </div>
                         </div>
                     ))}
                 </div>
