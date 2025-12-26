@@ -6,29 +6,29 @@ require('dotenv').config();
 const app = express();
 
 // 1. IMPROVED CORS CONFIGURATION
-// This allows your Vercel frontend to communicate with Render
+// Setting 'preflightContinue: false' ensures the middleware handles 
+// the OPTIONS request so you don't need app.options() at all.
 app.use(cors({
     origin: '*', 
     methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'x-auth-token']
+    allowedHeaders: ['Content-Type', 'x-auth-token'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
 
-// 2. UPDATED WILDCARD SYNTAX
-// Changed '*' to '(.*)' to fix the "Missing parameter name" PathError
-app.options('(.*)', cors()); 
+// REMOVED: app.options('(.*)', cors()); <--- This was the line causing the crash.
 
 app.use(express.json());
 
-// 3. DATABASE CONNECTION
-// Uses the MONGO_URI from your Render Environment Variables
+// 2. DATABASE CONNECTION
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected'))
     .catch(err => console.log('❌ DB Connection Error:', err));
 
-// 4. ROUTES
+// 3. ROUTES
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/todos', require('./routes/todos'));
 
-// 5. SERVER START
+// 4. SERVER START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
