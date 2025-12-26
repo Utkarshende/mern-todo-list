@@ -4,7 +4,6 @@ import Login from './components/Login';
 import Register from './components/Register';
 import './App.css';
 
-// This logic uses the environment variable if it exists, otherwise localhost
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
 const API_BASE = `${API_URL}/api/todos`;
 
@@ -14,14 +13,12 @@ function App() {
     const [isRegistering, setIsRegistering] = useState(false);
     const [newTodo, setNewTodo] = useState("");
 
-    // Function to logout (defined above useCallback so it's accessible)
     const logout = useCallback(() => {
         setToken(null);
         setTodos([]);
         localStorage.removeItem('token');
     }, []);
 
-    // Function to fetch todos with the Auth Header
     const getTodos = useCallback(async () => {
         if (!token) return;
         try {
@@ -30,7 +27,6 @@ function App() {
             });
             setTodos(res.data);
         } catch (err) {
-            console.error("Fetch Error:", err);
             if (err.response?.status === 401) logout();
         }
     }, [token, logout]);
@@ -39,8 +35,6 @@ function App() {
         if (token) {
             localStorage.setItem('token', token);
             getTodos();
-        } else {
-            localStorage.removeItem('token');
         }
     }, [token, getTodos]);
 
@@ -52,27 +46,33 @@ function App() {
             });
             setTodos([res.data, ...todos]);
             setNewTodo("");
-        } catch (err) { console.error("Add Error:", err); }
+        } catch (err) {
+            console.error("Add Error:", err);
+        }
     };
 
     const deleteTodo = async (id) => {
         try {
+            // Note: Use backticks for the URL string interpolation
             await axios.delete(`${API_BASE}/${id}`, {
                 headers: { 'x-auth-token': token }
             });
+            // Update UI by removing the deleted item from state
             setTodos(todos.filter(todo => todo._id !== id));
-        } catch (err) { console.error("Delete Error:", err); }
+        } catch (err) {
+            console.error("Delete Error:", err.message);
+            alert("Delete failed. The server might be waking up, please try again.");
+        }
     };
 
-    // View Logic
     if (!token) {
         return (
             <div className="App">
                 <div className="container">
-                    <h1 className="brand-name">TaskFlow</h1>
+                    <h1>TaskFlow</h1>
                     {isRegistering ? <Register setToken={setToken} /> : <Login setToken={setToken} />}
                     <button className="toggle-auth" onClick={() => setIsRegistering(!isRegistering)}>
-                        {isRegistering ? "Already have an account? Login" : "Need an account? Register"}
+                        {isRegistering ? "Need an account? Register" : "Have an account? Login"}
                     </button>
                 </div>
             </div>
@@ -83,26 +83,24 @@ function App() {
         <div className="App">
             <div className="container">
                 <div className="header-flex">
-                    <h1>My Tasks</h1>
+                    <h2>My Tasks</h2>
                     <button onClick={logout} className="logout-btn">Logout</button>
                 </div>
                 <div className="add-todo">
                     <input 
                         value={newTodo} 
                         onChange={e => setNewTodo(e.target.value)} 
-                        placeholder="Add a new task..." 
-                        onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+                        placeholder="Add a task..." 
                     />
                     <button onClick={addTodo}>Add</button>
                 </div>
                 <div className="todos-list">
-                    {todos.length === 0 ? <p className="empty-msg">No tasks yet. Add one!</p> : null}
                     {todos.map(todo => (
                         <div key={todo._id} className="todo-item">
-                            <span className={todo.completed ? "completed" : ""}>{todo.text}</span>
-                            <div className="delete-todo" onClick={() => deleteTodo(todo._id)}>
-                                <i className="fas fa-trash"></i>
-                            </div>
+                            <span>{todo.text}</span>
+                            <button onClick={() => deleteTodo(todo._id)} className="delete-btn">
+                                Delete
+                            </button>
                         </div>
                     ))}
                 </div>
